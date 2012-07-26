@@ -38,3 +38,7 @@ out/*
 ehthumbs.db
 Icon?
 Thumbs.db
+
+# Maven build #
+###############
+target/*
