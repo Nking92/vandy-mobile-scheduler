@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -39,6 +40,8 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 	private String[] mTabs;
 	private CursorAdapter adapter;
 	
+	private boolean isFirstLoad;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -48,11 +51,12 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 		
 		listView = (ListView)findViewById(R.id.list);
 		
-		SQLiteDatabase db = new TeamsOpenHelper(this).getReadableDatabase();
+		SQLiteDatabase db = new GeneralOpenHelper(this).getReadableDatabase();
 		Cursor c = db.query("teams", PROJECTION, null, null, null, null, null);
+		isFirstLoad = !(c.getCount() > 0);
 		adapter = new TeamsCursorAdapter(this);
 		adapter.swapCursor(c);
-		
+		//db.close();
 		
 		listView.setAdapter(adapter);
 		listView.setOnItemClickListener(new OnItemClickListener()
@@ -78,6 +82,8 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 		getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 		getSupportActionBar().setListNavigationCallbacks(navList, this);
 		getSupportActionBar().setDisplayShowTitleEnabled(false);
+		// Avoid calling back to Meetings (at index 2 of tabs)
+		getSupportActionBar().setSelectedNavigationItem(2);
 		
 		new LoadDataTask().execute();
 	}
@@ -87,27 +93,22 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 	public boolean onNavigationItemSelected(int itemPosition, long itemId) 
 	{
 		// Temporary code to let me see the teams activity:
-    	String selectedTab = mTabs[itemPosition];
+    	String selectedTab = tabs[itemPosition];
     	if (selectedTab.equals("Meetings"))
     	{
     		Intent i = new Intent(this, MainActivity.class);
     		startActivity(i);
     	}
-    	else if (selectedTab.equals("Twitter"))
+    	else if (selectedTab.equals("News"))
     	{
     		Intent i = new Intent(this, TwitterActivity.class);
     		startActivity(i);
     	}
-    	else if (selectedTab.equals("News"))
-    	{
-	    //Intent i = new Intent(this, NewsActivity.class);
-	    //	startActivity(i);
-    	}
 
     	else if (selectedTab.equals("myVM"))
     	{
-	    //Intent i = new Intent(this, myVMActivity.class);
-	    //	startActivity(i);
+    		Intent i = new Intent(this, MyVmMain.class);
+	    	startActivity(i);
     	}
     	
         return true;
@@ -115,7 +116,20 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 	
 	class LoadDataTask extends AsyncTask<Void, Void, String>
 	{
+		private static final String TAG = "TeamsActivity$LoadDataTask";
 		private static final String TEAMS_URL = "http://70.138.50.84/apps.json";
+		
+		ProgressDialog dialog;
+		
+		protected void onPreExecute()
+		{
+			if (isFirstLoad)
+			{
+				dialog = new ProgressDialog(TeamsActivity.this);
+				dialog.setMessage("Loading...");
+				dialog.show();
+			}
+		}
 		
 		@Override
 		protected String doInBackground(Void... voids) 
@@ -134,7 +148,7 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 			}
 			catch (Exception e)
 			{
-				e.printStackTrace();
+				Log.w(TAG, e.toString());
 			}
 			finally
 			{
@@ -146,10 +160,12 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 		@Override
 		protected void onPostExecute(String result)
 		{
+			SQLiteDatabase db = new GeneralOpenHelper(TeamsActivity.this).getWritableDatabase();
 			try 
 			{
+				if (result == null)
+					return;
 				JSONArray jsonArray = new JSONArray(result);
-				SQLiteDatabase db = new TeamsOpenHelper(TeamsActivity.this).getWritableDatabase();
 				String entriesToDelete = "server_id NOT IN (-1";
 				for (int i = 0; i < jsonArray.length(); i++)
 				{
@@ -192,7 +208,15 @@ public class TeamsActivity extends SherlockFragmentActivity implements ActionBar
 			} 
 			catch (JSONException e) 
 			{
-				e.printStackTrace();
+				Log.w(TAG, e.toString());
+			}
+			finally
+			{
+				db.close();
+				if (isFirstLoad)
+				{
+					dialog.dismiss();
+				}
 			}
 		}
 	}

@@ -276,6 +276,7 @@ public class DetailActivity extends SherlockMapActivity{
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("At what time?")
 			.setItems(items, new DialogInterface.OnClickListener(){
+				@Override
 				public void onClick(DialogInterface dialog, int item){
 					switch (item){
 						case 0: millisPrior = 0; break;
@@ -300,6 +301,7 @@ public class DetailActivity extends SherlockMapActivity{
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage("This event is starting soon!")
 			.setPositiveButton("Okay", new DialogInterface.OnClickListener(){
+				@Override
 				public void onClick(DialogInterface dialog, int id){
 					dialog.cancel();
 				}

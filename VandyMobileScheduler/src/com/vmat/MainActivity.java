@@ -4,11 +4,16 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -46,7 +51,7 @@ public class MainActivity extends SherlockFragmentActivity
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.main);
-
+		
 		db = new EventsDB(this);
 
 		mAdapter = new EventsCursorAdapter();
@@ -166,21 +171,15 @@ public class MainActivity extends SherlockFragmentActivity
     		Intent i = new Intent(this, TeamsActivity.class);
     		startActivity(i);
     	}
-    	else if (selectedTab.equals("Twitter"))
+    	else if (selectedTab.equals("News"))
     	{
     		Intent i = new Intent(this, TwitterActivity.class);
     		startActivity(i);
     	}
-    	else if (selectedTab.equals("News"))
+    	else if ( selectedTab.equals("myVM") )
     	{
-	    //Intent i = new Intent(this, NewsActivity.class);
-	    //	startActivity(i);
-    	}
-
-    	else if (selectedTab.equals("myVM"))
-    	{
-	    //Intent i = new Intent(this, myVMActivity.class);
-	    //	startActivity(i);
+    		Intent i = new Intent(this, MyVmMain.class);
+    		startActivity(i);
     	}
     	
         return true;
